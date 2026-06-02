@@ -1,0 +1,17 @@
+# Deploy do servidor multiplayer no Render (https://render.com).
+# No painel do Render: New + > Blueprint > aponte para este repositório.
+# Depois, em Environment, configure MAPILLARY_TOKEN e CLIENT_ORIGIN.
+services:
+  - type: web
+    name: geogesser-server
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: MAPILLARY_TOKEN
+        sync: false # defina manualmente no painel (segredo)
+      - key: CLIENT_ORIGIN
+        sync: false # ex: https://geo-gesser.vercel.app
