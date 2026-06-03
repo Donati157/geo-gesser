@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { socket } from "../socket";
+import { loadRecord } from "../record";
 
 interface Props {
   connected: boolean;
@@ -13,6 +14,7 @@ export default function Home({ connected, setYou, onError, error, onSolo }: Prop
   const [name, setName] = useState(localStorage.getItem("gg_name") || "");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
+  const record = loadRecord();
 
   const remember = () => localStorage.setItem("gg_name", name.trim());
 
@@ -59,6 +61,12 @@ export default function Home({ connected, setYou, onError, error, onSolo }: Prop
           Largado em algum lugar do mundo. Explore a rua, leia as pistas e crave no
           mapa. Mais perto = mais pontos. <strong>Grátis, sem login, multiplayer.</strong>
         </p>
+        {record.score > 0 && (
+          <div className="home-record">
+            🏆 Recorde: {record.score.toLocaleString("pt-BR")} pts
+            {record.streak >= 2 && <> · 🔥 {record.streak} streak</>}
+          </div>
+        )}
       </div>
 
       <div className="card home-card">
