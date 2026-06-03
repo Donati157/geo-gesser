@@ -31,14 +31,15 @@ export default function StreetView({ imageId, token }: Props) {
   imageIdRef.current = imageId;
   const showStatic = failed || userStatic;
 
-  // Busca a foto estática (fallback) para a imagem atual.
+  // Busca a foto estática (fallback) na maior resolução disponível.
   useEffect(() => {
     let active = true;
     setThumb(null);
-    fetch(`https://graph.mapillary.com/${imageId}?fields=thumb_2048_url&access_token=${token}`)
+    fetch(`https://graph.mapillary.com/${imageId}?fields=thumb_original_url,thumb_2048_url&access_token=${token}`)
       .then((r) => r.json())
       .then((d) => {
-        if (active && d?.thumb_2048_url) setThumb(d.thumb_2048_url);
+        const url = d?.thumb_original_url || d?.thumb_2048_url;
+        if (active && url) setThumb(url);
       })
       .catch(() => {});
     return () => {

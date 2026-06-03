@@ -151,7 +151,9 @@ input:focus { border-color: var(--primary); }
 .street-fallback {
   position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: cover; object-position: center; background: #0a0f1f;
+  animation: fadeIn 0.4s ease;
 }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 .street-fallback-loading {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   color: var(--muted); background: #0a0f1f;

@@ -24,6 +24,7 @@ export default function SoloGame({ onExit }: { onExit: () => void }) {
   const [streak, setStreak] = useState(0);
   const [maxStreak, setMaxStreak] = useState(0);
   const [last, setLast] = useState<LastResult | null>(null);
+  const [nextImg, setNextImg] = useState<SoloImage | null>(null); // pré-carregada
   const [mapOpen, setMapOpen] = useState(false);
   const [errMsg, setErrMsg] = useState("");
   const [record] = useState<Record>(() => loadRecord());
@@ -50,6 +51,20 @@ export default function SoloGame({ onExit }: { onExit: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Pré-carrega a próxima imagem durante a revelação -> próxima rodada instantânea.
+  useEffect(() => {
+    if (phase !== "reveal" || round >= TOTAL || nextImg) return;
+    let active = true;
+    getRandomImage()
+      .then((img) => {
+        if (active) setNextImg(img);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [phase, round, nextImg]);
+
   const submit = () => {
     if (!pick || !image) return;
     const distanceKm = haversineKm(pick, { lat: image.lat, lng: image.lng });
@@ -67,6 +82,17 @@ export default function SoloGame({ onExit }: { onExit: () => void }) {
     if (round >= TOTAL) {
       setResult(updateRecord(score, maxStreak));
       setPhase("over");
+      return;
+    }
+    if (nextImg) {
+      // Já pré-carregada: troca instantânea, sem tela de loading.
+      setImage(nextImg);
+      setNextImg(null);
+      setRound((r) => r + 1);
+      setPick(null);
+      setLast(null);
+      setMapOpen(false);
+      setPhase("playing");
     } else {
       loadRound(round + 1);
     }
@@ -77,6 +103,7 @@ export default function SoloGame({ onExit }: { onExit: () => void }) {
     setStreak(0);
     setMaxStreak(0);
     setResult(null);
+    setNextImg(null);
     loadRound(1);
   };
 
