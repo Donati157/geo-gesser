@@ -248,6 +248,11 @@ input:focus { border-color: var(--primary); }
 .leaflet-container { background: #0a0f1f; font-family: inherit; }
 
 /* ---------- modo solo / extras ---------- */
+.overlay {
+  position: fixed; inset: 0; z-index: 40;
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  background: rgba(11, 16, 32, 0.92); backdrop-filter: blur(6px);
+}
 .hint { color: var(--muted); font-size: 13px; text-align: center; margin: 6px 0 0; }
 .good-line { color: var(--good); }
 .spinner {
