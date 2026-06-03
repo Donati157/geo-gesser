@@ -48,7 +48,15 @@ export default function GuessMap({ interactive, pick, onPick, reveal }: Props) {
     mapRef.current = map;
     setTimeout(() => map.invalidateSize(), 50);
 
+    // Quando o container muda de tamanho (ex: abrir/expandir o mapa), o Leaflet
+    // precisa ser avisado, senão só renderiza tiles do tamanho antigo (fica preto).
+    const ro = new ResizeObserver(() => {
+      map.invalidateSize();
+    });
+    ro.observe(elRef.current);
+
     return () => {
+      ro.disconnect();
       map.remove();
       mapRef.current = null;
     };
