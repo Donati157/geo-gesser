@@ -6,9 +6,10 @@ interface Props {
   setYou: (id: string) => void;
   onError: (msg: string | null) => void;
   error: string | null;
+  onSolo: () => void;
 }
 
-export default function Home({ connected, setYou, onError, error }: Props) {
+export default function Home({ connected, setYou, onError, error, onSolo }: Props) {
   const [name, setName] = useState(localStorage.getItem("gg_name") || "");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -68,15 +69,20 @@ export default function Home({ connected, setYou, onError, error }: Props) {
             maxLength={20}
             placeholder="ex: Capitão Bússola"
             onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && create()}
+            onKeyDown={(e) => e.key === "Enter" && onSolo()}
           />
         </label>
 
-        <button className="btn btn-primary big" disabled={busy || !connected} onClick={create}>
-          Criar sala
+        <button className="btn btn-primary big" onClick={onSolo}>
+          🎯 Jogar sozinho
         </button>
+        <p className="hint">Funciona na hora, sem esperar ninguém.</p>
 
-        <div className="divider"><span>ou entre numa sala</span></div>
+        <div className="divider"><span>ou jogue com amigos</span></div>
+
+        <button className="btn big" disabled={busy || !connected} onClick={create}>
+          Criar sala multiplayer
+        </button>
 
         <div className="join-row">
           <input
@@ -92,7 +98,14 @@ export default function Home({ connected, setYou, onError, error }: Props) {
           </button>
         </div>
 
-        {!connected && <p className="status-line">Conectando ao servidor…</p>}
+        {!connected ? (
+          <p className="status-line">
+            ⏳ Acordando o servidor multiplayer… (plano grátis, pode levar ~30s).
+            Enquanto isso, jogue sozinho acima!
+          </p>
+        ) : (
+          <p className="status-line good-line">✅ Servidor conectado — multiplayer pronto!</p>
+        )}
         {error && <p className="error-line">{error}</p>}
       </div>
 

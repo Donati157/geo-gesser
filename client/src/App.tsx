@@ -4,6 +4,7 @@ import type { RoomState, RoundStart } from "./types";
 import Home from "./components/Home";
 import Lobby from "./components/Lobby";
 import Game from "./components/Game";
+import SoloGame from "./components/SoloGame";
 
 export default function App() {
   const [connected, setConnected] = useState(socket.connected);
@@ -11,6 +12,7 @@ export default function App() {
   const [room, setRoom] = useState<RoomState | null>(null);
   const [roundStart, setRoundStart] = useState<RoundStart | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [solo, setSolo] = useState(false);
 
   useEffect(() => {
     const onConnect = () => {
@@ -50,8 +52,20 @@ export default function App() {
     socket.connect();
   };
 
+  if (solo && !room) {
+    return <SoloGame onExit={() => setSolo(false)} />;
+  }
+
   if (!room) {
-    return <Home connected={connected} setYou={setYou} onError={setError} error={error} />;
+    return (
+      <Home
+        connected={connected}
+        setYou={setYou}
+        onError={setError}
+        error={error}
+        onSolo={() => setSolo(true)}
+      />
+    );
   }
 
   const isHost = room.hostId === you;
