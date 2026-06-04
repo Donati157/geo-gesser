@@ -23,6 +23,7 @@ export default function StreetView({ imageId, token }: Props) {
   const viewerRef = useRef<Viewer | null>(null);
   const imageIdRef = useRef(imageId);
   const recoverRef = useRef(0);
+  const watchdogRef = useRef<number | undefined>(undefined);
   const [gen, setGen] = useState(0);
   const [failed, setFailed] = useState(() => !webglAvailable());
   const [thumb, setThumb] = useState<string | null>(null);
@@ -66,6 +67,12 @@ export default function StreetView({ imageId, token }: Props) {
     }
     viewerRef.current = viewer;
 
+    // Watchdog: se a imagem não carregar em alguns segundos (id inválido,
+    // tela preta, rede), cai para a foto estática em vez de ficar travado.
+    const onImage = () => window.clearTimeout(watchdogRef.current);
+    viewer.on("image", onImage);
+    watchdogRef.current = window.setTimeout(() => setFailed(true), 9000);
+
     const canvas = el.querySelector("canvas");
     const onLost = (e: Event) => {
       e.preventDefault();
@@ -79,8 +86,10 @@ export default function StreetView({ imageId, token }: Props) {
     canvas?.addEventListener("webglcontextlost", onLost as EventListener);
 
     return () => {
+      window.clearTimeout(watchdogRef.current);
       canvas?.removeEventListener("webglcontextlost", onLost as EventListener);
       try {
+        viewer.off("image", onImage);
         viewer.remove();
       } catch {
         /* ignora */
@@ -94,7 +103,9 @@ export default function StreetView({ imageId, token }: Props) {
   useEffect(() => {
     const viewer = viewerRef.current;
     if (failed || !viewer || !imageId) return;
-    viewer.moveTo(imageId).catch(() => {});
+    window.clearTimeout(watchdogRef.current);
+    watchdogRef.current = window.setTimeout(() => setFailed(true), 9000);
+    viewer.moveTo(imageId).catch(() => setFailed(true));
   }, [imageId, failed]);
 
   const move = (dir: NavigationDirection, msgFim: string) => {

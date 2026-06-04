@@ -51,10 +51,14 @@ export async function getRandomImage(maxAttempts = 18): Promise<SoloImage> {
 
       const feats: SoloImage[] = [];
       for (let i = 0; i < layer.length; i++) {
-        const gj: any = layer.feature(i).toGeoJSON(x, y, TILE_Z);
+        const feat = layer.feature(i);
+        const id = (feat.properties as any).id;
+        // IDs do Mapillary > 2^53 são corrompidos ao virar número JS -> pula.
+        if (typeof id !== "number" || !Number.isSafeInteger(id)) continue;
+        const gj: any = feat.toGeoJSON(x, y, TILE_Z);
         const [flng, flat] = gj.geometry.coordinates;
         feats.push({
-          imageId: String(gj.properties.id ?? layer.feature(i).id),
+          imageId: String(id),
           lng: flng,
           lat: flat,
           region: region.name,

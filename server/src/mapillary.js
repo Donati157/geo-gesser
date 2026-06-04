@@ -49,10 +49,14 @@ export async function getRandomImage(token, { maxAttempts = 16 } = {}) {
 
       features = [];
       for (let i = 0; i < layer.length; i++) {
-        const gj = layer.feature(i).toGeoJSON(x, y, TILE_Z);
+        const feat = layer.feature(i);
+        const id = feat.properties.id;
+        // IDs do Mapillary > 2^53 são corrompidos ao virar número JS -> pula.
+        if (typeof id !== "number" || !Number.isSafeInteger(id)) continue;
+        const gj = feat.toGeoJSON(x, y, TILE_Z);
         const [lng, lat] = gj.geometry.coordinates;
         features.push({
-          id: String(gj.properties.id ?? layer.feature(i).id),
+          id: String(id),
           lng,
           lat,
           isPano: gj.properties.is_pano === true || gj.properties.is_pano === 1,
