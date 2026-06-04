@@ -135,7 +135,7 @@ export default function SoloGame({ onExit }: { onExit: () => void }) {
 
           <div className={`map-panel ${mapOpen ? "open" : ""}`}>
             <div className="map-wrap">
-              <GuessMap interactive={true} pick={pick} onPick={(lat, lng) => setPick({ lat, lng })} reveal={null} />
+              <GuessMap interactive={true} pick={pick} onPick={(lat, lng) => setPick({ lat, lng })} reveal={null} onConfirm={submit} />
             </div>
             <div className="map-controls">
               <button className="btn btn-ghost small" onClick={() => setMapOpen((o) => !o)}>
