@@ -1,18 +1,18 @@
 :root {
-  --bg: #0b1020;
-  --bg-2: #121933;
-  --panel: rgba(18, 25, 51, 0.92);
-  --panel-solid: #141c38;
-  --line: rgba(255, 255, 255, 0.08);
-  --text: #e8edf7;
-  --muted: #8a96b3;
-  --primary: #22d3ee;
-  --primary-2: #6366f1;
-  --accent: #f0b429;
-  --danger: #f43f5e;
+  --bg: #0b1120;
+  --bg-2: #1e293b;
+  --panel: rgba(15, 23, 42, 0.92);   /* #0F172A */
+  --panel-solid: #1e293b;            /* slate-800 */
+  --line: rgba(255, 255, 255, 0.12);
+  --text: #ffffff;
+  --muted: #cbd5e1;
+  --primary: #3b82f6;                /* azul principal */
+  --primary-2: #2563eb;             /* azul hover */
+  --accent: #fbbf24;                /* ouro */
+  --danger: #ef4444;               /* vermelho marcador */
   --good: #34d399;
   --radius: 16px;
-  --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  --shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
 }
 
 * { box-sizing: border-box; }
@@ -20,8 +20,8 @@ html, body, #root { height: 100%; margin: 0; }
 body {
   font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   background:
-    radial-gradient(1200px 600px at 80% -10%, rgba(99, 102, 241, 0.25), transparent),
-    radial-gradient(900px 500px at -10% 110%, rgba(34, 211, 238, 0.18), transparent),
+    radial-gradient(1200px 600px at 80% -10%, rgba(59, 130, 246, 0.22), transparent),
+    radial-gradient(900px 500px at -10% 110%, rgba(37, 99, 235, 0.16), transparent),
     var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
@@ -127,12 +127,12 @@ input:focus { border-color: var(--primary); }
   display: flex; align-items: center; gap: 10px;
   padding: 9px 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.03); margin-bottom: 6px;
 }
-.player-row.me { background: rgba(34, 211, 238, 0.1); }
+.player-row.me { background: rgba(59, 130, 246, 0.1); }
 .player-row .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
 .player-row .dot[data-on="true"] { background: var(--good); box-shadow: 0 0 8px var(--good); }
 .player-row .pname { flex: 1; font-weight: 600; }
 .badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,.1); color: var(--muted); }
-.badge.you { background: rgba(34, 211, 238, 0.2); color: var(--primary); }
+.badge.you { background: rgba(59, 130, 246, 0.2); color: var(--primary); }
 .settings { margin: 18px 0; }
 .setting { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .setting label { color: var(--muted); }
@@ -180,7 +180,7 @@ input:focus { border-color: var(--primary); }
 }
 .scoreboard h4 { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
 .sb-row { display: flex; align-items: center; gap: 8px; padding: 5px 4px; border-radius: 8px; }
-.sb-row.me { background: rgba(34, 211, 238, 0.12); }
+.sb-row.me { background: rgba(59, 130, 246, 0.12); }
 .sb-row .tick { width: 16px; color: var(--muted); }
 .sb-row .tick.done { color: var(--good); }
 .sb-row .pname { flex: 1; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -221,7 +221,7 @@ input:focus { border-color: var(--primary); }
   display: flex; align-items: center; gap: 10px; padding: 10px 12px;
   border-radius: 10px; background: rgba(255,255,255,.03); margin-bottom: 6px;
 }
-.result-row.me { background: rgba(34, 211, 238, 0.12); }
+.result-row.me { background: rgba(59, 130, 246, 0.12); }
 .result-row .pname { flex: 1; font-weight: 600; }
 .result-row .dist { color: var(--muted); font-size: 13px; }
 .result-row .pts { font-weight: 800; color: var(--good); min-width: 56px; text-align: right; }
@@ -245,9 +245,10 @@ input:focus { border-color: var(--primary); }
 
 /* ---------- pins do mapa ---------- */
 .map-pin {
-  width: 26px; height: 26px; border-radius: 50% 50% 50% 0;
+  width: 28px; height: 28px; border-radius: 50% 50% 50% 0;
   transform: rotate(-45deg); display: flex; align-items: center; justify-content: center;
-  border: 2px solid #fff; box-shadow: 0 3px 8px rgba(0,0,0,.5); font-size: 13px;
+  border: 2px solid #fff; font-size: 13px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
 }
 .map-pin > * , .map-pin { line-height: 1; }
 .map-pin.you { background: var(--primary); }
@@ -343,7 +344,7 @@ input:focus { border-color: var(--primary); }
   padding: 8px 14px; border-radius: 999px; font-weight: 700; font-size: 13px; box-shadow: var(--shadow);
 }
 .record-banner {
-  background: linear-gradient(90deg, rgba(240,180,41,.2), rgba(34,211,238,.15));
+  background: linear-gradient(90deg, rgba(240,180,41,.2), rgba(59,130,246,.15));
   border: 1px solid var(--accent); color: var(--accent);
   padding: 12px; border-radius: 12px; font-weight: 800; margin: 10px 0;
 }
