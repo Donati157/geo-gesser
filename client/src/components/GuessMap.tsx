@@ -16,33 +16,6 @@ interface Props {
   onConfirm?: () => void; // confirmar palpite (usado no modo tela cheia)
 }
 
-// Camadas de mapa disponíveis (botão de camadas, estilo FreeGuessr).
-const LAYERS = [
-  {
-    name: "Ruas",
-    icon: "🗺️",
-    url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-    opts: { subdomains: "abcd", maxZoom: 19 } as L.TileLayerOptions,
-    labels: false,
-  },
-  {
-    name: "Satélite",
-    icon: "🛰️",
-    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-    opts: { maxZoom: 19 } as L.TileLayerOptions,
-    labels: true, // adiciona nomes de lugares por cima
-  },
-  {
-    name: "Escuro",
-    icon: "🌙",
-    url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-    opts: { subdomains: "abcd", maxZoom: 19 } as L.TileLayerOptions,
-    labels: false,
-  },
-];
-const LABELS_URL =
-  "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}";
-
 const pin = (cls: string, label = "") =>
   L.divIcon({
     className: "",
@@ -56,9 +29,6 @@ export default function GuessMap({ interactive, pick, onPick, reveal, onConfirm 
   const mapRef = useRef<L.Map | null>(null);
   const guessMarker = useRef<L.Marker | null>(null);
   const layerRef = useRef<L.LayerGroup | null>(null);
-  const baseRef = useRef<L.TileLayer | null>(null);
-  const labelsRef = useRef<L.TileLayer | null>(null);
-  const [layerIdx, setLayerIdx] = useState(0);
   const [fs, setFs] = useState(false);
 
   // Cria o mapa uma vez.
@@ -71,6 +41,10 @@ export default function GuessMap({ interactive, pick, onPick, reveal, onConfirm 
       zoomControl: true,
       attributionControl: false,
     });
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+      maxZoom: 19,
+      subdomains: "abcd",
+    }).addTo(map);
     layerRef.current = L.layerGroup().addTo(map);
     mapRef.current = map;
     setTimeout(() => map.invalidateSize(), 50);
@@ -84,23 +58,6 @@ export default function GuessMap({ interactive, pick, onPick, reveal, onConfirm 
       mapRef.current = null;
     };
   }, []);
-
-  // Troca a camada base (ruas / satélite / escuro).
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-    const cfg = LAYERS[layerIdx];
-    if (baseRef.current) baseRef.current.remove();
-    if (labelsRef.current) {
-      labelsRef.current.remove();
-      labelsRef.current = null;
-    }
-    baseRef.current = L.tileLayer(cfg.url, cfg.opts).addTo(map);
-    baseRef.current.bringToBack();
-    if (cfg.labels) {
-      labelsRef.current = L.tileLayer(LABELS_URL, { maxZoom: 19 }).addTo(map);
-    }
-  }, [layerIdx]);
 
   // Avisa o Leaflet quando entra/sai de tela cheia (muda o tamanho).
   useEffect(() => {
@@ -175,31 +132,20 @@ export default function GuessMap({ interactive, pick, onPick, reveal, onConfirm 
     }
   }, [reveal]);
 
-  const cycleLayer = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setLayerIdx((i) => (i + 1) % LAYERS.length);
-  };
-  const next = LAYERS[(layerIdx + 1) % LAYERS.length];
-
   return (
     <div className={`guess-map-wrap ${fs ? "fs" : ""}`}>
       <div className="guess-map" ref={elRef} />
 
-      <div className="map-ctrls">
-        <button className="map-ctrl layers" title={`Trocar para ${next.name}`} onClick={cycleLayer}>
-          {LAYERS[layerIdx].icon} <span className="lab">{LAYERS[layerIdx].name}</span>
-        </button>
-        <button
-          className="map-ctrl"
-          title={fs ? "Sair da tela cheia" : "Tela cheia"}
-          onClick={(e) => {
-            e.stopPropagation();
-            setFs((v) => !v);
-          }}
-        >
-          {fs ? "✕" : "⛶"}
-        </button>
-      </div>
+      <button
+        className="map-ctrl fs-btn"
+        title={fs ? "Sair da tela cheia" : "Tela cheia"}
+        onClick={(e) => {
+          e.stopPropagation();
+          setFs((v) => !v);
+        }}
+      >
+        {fs ? "✕" : "⛶"}
+      </button>
 
       {fs && interactive && pick && onConfirm && (
         <button

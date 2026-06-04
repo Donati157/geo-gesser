@@ -196,9 +196,9 @@ input:focus { border-color: var(--primary); }
   border: 2px solid var(--line); box-shadow: var(--shadow);
   transition: height .2s ease;
 }
-.map-panel.open { width: min(560px, 70vw); }
-.map-panel.open .map-wrap { height: min(440px, 60vh); }
-.map-panel:hover .map-wrap { border-color: var(--primary); }
+/* passar o mouse em cima -> mapa aumenta (estilo GeoGuessr/FreeGuessr) */
+.map-panel:hover { width: min(620px, 72vw); }
+.map-panel:hover .map-wrap { height: min(460px, 62vh); border-color: var(--primary); }
 .map-controls { display: flex; gap: 8px; }
 .map-controls .btn-primary { flex: 1; }
 
@@ -264,15 +264,14 @@ input:focus { border-color: var(--primary); }
   border-radius: 16px; overflow: hidden; box-shadow: var(--shadow);
   border: 2px solid var(--primary);
 }
-.map-ctrls { position: absolute; top: 8px; right: 8px; z-index: 1000; display: flex; gap: 6px; }
-.map-ctrl {
-  height: 34px; min-width: 34px; padding: 0 9px; border-radius: 9px;
+.map-ctrl.fs-btn {
+  position: absolute; top: 8px; right: 8px; z-index: 1000;
+  width: 34px; height: 34px; border-radius: 9px;
   background: rgba(11, 16, 32, 0.85); border: 1px solid var(--line); color: #fff;
-  cursor: pointer; font-size: 15px; display: flex; align-items: center; gap: 5px;
+  cursor: pointer; font-size: 16px; display: flex; align-items: center;
   justify-content: center; box-shadow: var(--shadow); backdrop-filter: blur(6px);
 }
-.map-ctrl:hover { border-color: var(--primary); }
-.map-ctrl .lab { font-size: 12px; font-weight: 600; }
+.map-ctrl.fs-btn:hover { border-color: var(--primary); }
 .map-fs-confirm {
   position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
   z-index: 1000; padding: 14px 30px; font-size: 16px;
@@ -358,7 +357,7 @@ input:focus { border-color: var(--primary); }
   .logo { font-size: 40px; }
   .scoreboard { width: 160px; top: 64px; }
   .map-panel { width: 220px; }
-  .map-panel.open { width: 92vw; }
+  .map-panel:hover { width: 92vw; }
   .reveal-screen { flex-direction: column; }
   .reveal-map { height: 50vh; }
   .reveal-panel { width: 100%; }

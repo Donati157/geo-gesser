@@ -25,7 +25,6 @@ export default function SoloGame({ onExit }: { onExit: () => void }) {
   const [maxStreak, setMaxStreak] = useState(0);
   const [last, setLast] = useState<LastResult | null>(null);
   const [nextImg, setNextImg] = useState<SoloImage | null>(null); // pré-carregada
-  const [mapOpen, setMapOpen] = useState(false);
   const [errMsg, setErrMsg] = useState("");
   const [record] = useState<Record>(() => loadRecord());
   const [result, setResult] = useState<{ record: Record; beatScore: boolean; beatStreak: boolean } | null>(null);
@@ -34,7 +33,6 @@ export default function SoloGame({ onExit }: { onExit: () => void }) {
     setPhase("loading");
     setPick(null);
     setLast(null);
-    setMapOpen(false);
     try {
       const img = await getRandomImage();
       setImage(img);
@@ -91,7 +89,6 @@ export default function SoloGame({ onExit }: { onExit: () => void }) {
       setRound((r) => r + 1);
       setPick(null);
       setLast(null);
-      setMapOpen(false);
       setPhase("playing");
     } else {
       loadRound(round + 1);
@@ -133,14 +130,11 @@ export default function SoloGame({ onExit }: { onExit: () => void }) {
             <div className="record-chip">🏆 Recorde: {record.score.toLocaleString("pt-BR")}</div>
           )}
 
-          <div className={`map-panel ${mapOpen ? "open" : ""}`}>
+          <div className="map-panel">
             <div className="map-wrap">
               <GuessMap interactive={true} pick={pick} onPick={(lat, lng) => setPick({ lat, lng })} reveal={null} onConfirm={submit} />
             </div>
             <div className="map-controls">
-              <button className="btn btn-ghost small" onClick={() => setMapOpen((o) => !o)}>
-                {mapOpen ? "Esconder mapa" : "🗺 Abrir mapa"}
-              </button>
               <button className="btn btn-primary" disabled={!pick} onClick={submit}>
                 {pick ? "Cravar palpite" : "Clique no mapa"}
               </button>

@@ -26,14 +26,12 @@ function useCountdown(deadline: number | null) {
 
 export default function Game({ room, you, isHost, roundStart, error, onLeave }: Props) {
   const [pick, setPick] = useState<{ lat: number; lng: number } | null>(null);
-  const [mapOpen, setMapOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   // Reseta a cada nova rodada.
   useEffect(() => {
     setPick(null);
     setSubmitted(false);
-    setMapOpen(false);
   }, [room.round, roundStart?.imageId]);
 
   const secondsLeft = useCountdown(room.status === "playing" ? room.deadline : null);
@@ -42,7 +40,6 @@ export default function Game({ room, you, isHost, roundStart, error, onLeave }: 
     if (!pick || submitted) return;
     socket.emit("submit_guess", { lat: pick.lat, lng: pick.lng });
     setSubmitted(true);
-    setMapOpen(false);
   };
 
   if (error) {
@@ -155,14 +152,11 @@ export default function Game({ room, you, isHost, roundStart, error, onLeave }: 
           ✅ Palpite enviado! Aguardando os outros jogadores…
         </div>
       ) : (
-        <div className={`map-panel ${mapOpen ? "open" : ""}`}>
+        <div className="map-panel">
           <div className="map-wrap">
             <GuessMap interactive={true} pick={pick} onPick={(lat, lng) => setPick({ lat, lng })} reveal={null} onConfirm={submit} />
           </div>
           <div className="map-controls">
-            <button className="btn btn-ghost small" onClick={() => setMapOpen((o) => !o)}>
-              {mapOpen ? "Esconder mapa" : "🗺 Abrir mapa"}
-            </button>
             <button className="btn btn-primary" disabled={!pick} onClick={submit}>
               {pick ? "Cravar palpite" : "Clique no mapa"}
             </button>
