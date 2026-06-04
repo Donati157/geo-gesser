@@ -67,6 +67,10 @@ export default function StreetView({ imageId, token }: Props) {
     }
     viewerRef.current = viewer;
 
+    // Navegar SÓ para imagens 360° (esféricas) — remove as setas que levam
+    // para fotos chapadas (perspectiva/fisheye).
+    viewer.setFilter(["==", "cameraType", "spherical"]).catch(() => {});
+
     const canvas = el.querySelector("canvas");
     const onLost = (e: Event) => {
       e.preventDefault();
