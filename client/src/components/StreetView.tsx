@@ -67,12 +67,6 @@ export default function StreetView({ imageId, token }: Props) {
     }
     viewerRef.current = viewer;
 
-    // Watchdog: se a imagem não carregar em alguns segundos (id inválido,
-    // tela preta, rede), cai para a foto estática em vez de ficar travado.
-    const onImage = () => window.clearTimeout(watchdogRef.current);
-    viewer.on("image", onImage);
-    watchdogRef.current = window.setTimeout(() => setFailed(true), 9000);
-
     const canvas = el.querySelector("canvas");
     const onLost = (e: Event) => {
       e.preventDefault();
@@ -89,7 +83,6 @@ export default function StreetView({ imageId, token }: Props) {
       window.clearTimeout(watchdogRef.current);
       canvas?.removeEventListener("webglcontextlost", onLost as EventListener);
       try {
-        viewer.off("image", onImage);
         viewer.remove();
       } catch {
         /* ignora */
@@ -99,13 +92,21 @@ export default function StreetView({ imageId, token }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, gen, failed]);
 
-  // Move para a nova imagem quando a rodada troca.
+  // Move para a imagem da rodada (inicial e nas trocas). Watchdog único: se o
+  // moveTo não resolver em 12s (id inválido/tela preta/rede), cai pra foto.
   useEffect(() => {
     const viewer = viewerRef.current;
     if (failed || !viewer || !imageId) return;
     window.clearTimeout(watchdogRef.current);
-    watchdogRef.current = window.setTimeout(() => setFailed(true), 9000);
-    viewer.moveTo(imageId).catch(() => setFailed(true));
+    const wd = window.setTimeout(() => setFailed(true), 12000);
+    watchdogRef.current = wd;
+    viewer
+      .moveTo(imageId)
+      .then(() => window.clearTimeout(wd))
+      .catch(() => {
+        window.clearTimeout(wd);
+        setFailed(true);
+      });
   }, [imageId, failed]);
 
   const move = (dir: NavigationDirection, msgFim: string) => {
