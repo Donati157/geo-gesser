@@ -1,6 +1,12 @@
 import { VectorTile } from "@mapbox/vector-tile";
 import { PbfReader } from "pbf";
-import { randomRegion } from "./locations.js";
+import { REGIONS } from "./locations.js";
+
+// Separa cidades de regiões rurais para dar chance ao "interior sem pistas".
+const isRural = (r) => /Interior|Campo|Pampa|Meio-Oeste/.test(r.name);
+const RURAL = REGIONS.filter(isRural);
+const CITIES = REGIONS.filter((r) => !isRural(r));
+const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
 // O endpoint Graph /images?bbox= do Mapillary quebra em áreas densas
 // ("Please reduce the amount of data..."). A forma confiável é usar os
@@ -29,9 +35,14 @@ function randomPointIn(bbox) {
 }
 
 // Busca uma imagem de rua aleatória num ponto bem coberto do mundo.
-export async function getRandomImage(token, { maxAttempts = 30 } = {}) {
+export async function getRandomImage(token, { maxAttempts = 36 } = {}) {
+  // ~45% das rodadas tentam um lugar rural/interior (mais difícil, poucas pistas).
+  const wantRural = RURAL.length > 0 && Math.random() < 0.45;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const region = randomRegion();
+    // Insiste na categoria escolhida; nas últimas tentativas libera geral pra
+    // garantir que sempre retorne algo.
+    const fallback = attempt >= maxAttempts - 10;
+    const region = fallback ? pick(REGIONS) : pick(wantRural ? RURAL : CITIES);
     const pt = randomPointIn(region.bbox);
     const { x, y } = lngLatToTile(pt.lng, pt.lat, TILE_Z);
 

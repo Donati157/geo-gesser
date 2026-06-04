@@ -54,6 +54,20 @@ export const REGIONS: Region[] = [
   { name: "Bruxelas, Bélgica", bbox: [4.34, 50.84, 4.38, 50.86] },
   { name: "Zurique, Suíça", bbox: [8.52, 47.36, 8.56, 47.39] },
   { name: "Montevidéu, Uruguai", bbox: [-56.2, -34.91, -56.16, -34.88] },
+
+  // --- Regiões rurais / interior (estradas e campo, poucas pistas) ---
+  { name: "Interior da França", bbox: [1.0, 46.0, 4.5, 48.4] },
+  { name: "Campo da Alemanha", bbox: [8.5, 49.5, 12.0, 51.5] },
+  { name: "Campo da Holanda/Bélgica", bbox: [4.0, 50.8, 6.5, 52.3] },
+  { name: "Interior da Espanha", bbox: [-4.5, 39.0, -1.5, 41.4] },
+  { name: "Campo da Inglaterra", bbox: [-2.5, 51.0, 0.3, 52.8] },
+  { name: "Interior da Suécia", bbox: [13.0, 57.0, 16.5, 59.2] },
+  { name: "Campo da Itália", bbox: [10.5, 43.5, 13.0, 45.4] },
+  { name: "Interior da Polônia", bbox: [17.0, 51.0, 21.0, 53.0] },
+  { name: "Campo da Dinamarca", bbox: [9.0, 55.3, 12.0, 56.8] },
+  { name: "Interior dos EUA (Meio-Oeste)", bbox: [-97.5, 42.0, -91.0, 45.5] },
+  { name: "Interior do Brasil", bbox: [-49.0, -22.5, -45.0, -20.0] },
+  { name: "Pampa (Argentina/Uruguai)", bbox: [-60.0, -35.0, -56.0, -32.5] },
 ];
 
 export function randomRegion(): Region {

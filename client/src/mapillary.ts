@@ -1,11 +1,17 @@
 import { VectorTile } from "@mapbox/vector-tile";
 import { PbfReader } from "pbf";
-import { randomRegion } from "./regions";
+import { REGIONS } from "./regions";
 
 // Busca de imagens do Mapillary direto no NAVEGADOR (modo solo, sem servidor).
 // Usa vector tiles (z14, camada "image"), igual ao servidor.
 const TILE_Z = 14;
 const TOKEN = import.meta.env.VITE_MAPILLARY_TOKEN as string | undefined;
+
+// Cidades vs interior/rural (pra cair às vezes em lugar sem muita pista).
+const isRural = (r: { name: string }) => /Interior|Campo|Pampa|Meio-Oeste/.test(r.name);
+const RURAL = REGIONS.filter(isRural);
+const CITIES = REGIONS.filter((r) => !isRural(r));
+const pick = <T,>(list: T[]): T => list[Math.floor(Math.random() * list.length)];
 
 export interface SoloImage {
   imageId: string;
@@ -29,11 +35,14 @@ export function mapillaryToken(): string {
   return TOKEN || "";
 }
 
-export async function getRandomImage(maxAttempts = 30): Promise<SoloImage> {
+export async function getRandomImage(maxAttempts = 36): Promise<SoloImage> {
   if (!TOKEN) throw new Error("Token do Mapillary não configurado no cliente.");
 
+  // ~45% das rodadas tentam um lugar rural/interior (mais difícil).
+  const wantRural = RURAL.length > 0 && Math.random() < 0.45;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const region = randomRegion();
+    const fallback = attempt >= maxAttempts - 10;
+    const region = fallback ? pick(REGIONS) : pick(wantRural ? RURAL : CITIES);
     const [minLng, minLat, maxLng, maxLat] = region.bbox;
     const lng = minLng + Math.random() * (maxLng - minLng);
     const lat = minLat + Math.random() * (maxLat - minLat);
