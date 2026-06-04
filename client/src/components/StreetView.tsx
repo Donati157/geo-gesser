@@ -55,10 +55,11 @@ export default function StreetView({ imageId, token }: Props) {
 
     let viewer: Viewer;
     try {
+      // Sem imageId no construtor: a imagem é carregada via moveTo (abaixo),
+      // assim a promise do moveTo reflete sucesso/falha de forma confiável.
       viewer = new Viewer({
         accessToken: token,
         container: el,
-        imageId: imageIdRef.current,
         component: { cover: false },
       });
     } catch {
