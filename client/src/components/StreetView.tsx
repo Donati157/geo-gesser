@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Viewer } from "mapillary-js";
+import { Viewer, NavigationDirection } from "mapillary-js";
 
 interface Props {
   imageId: string;
@@ -16,8 +16,8 @@ function webglAvailable(): boolean {
 }
 
 // Visualizador de rua do Mapillary (WebGL via mapillary-js).
-// Se o WebGL não estiver disponível ou o contexto cair, troca automaticamente
-// (e silenciosamente) para a foto estática do local — sem botões na tela.
+// Setas de navegação SEMPRE visíveis (andar pra frente/trás). Se o WebGL cair,
+// troca automaticamente (e silenciosamente) para a foto estática do local.
 export default function StreetView({ imageId, token }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Viewer | null>(null);
@@ -26,6 +26,7 @@ export default function StreetView({ imageId, token }: Props) {
   const [gen, setGen] = useState(0);
   const [failed, setFailed] = useState(() => !webglAvailable());
   const [thumb, setThumb] = useState<string | null>(null);
+  const [navMsg, setNavMsg] = useState<string | null>(null);
 
   imageIdRef.current = imageId;
 
@@ -96,10 +97,39 @@ export default function StreetView({ imageId, token }: Props) {
     viewer.moveTo(imageId).catch(() => {});
   }, [imageId, failed]);
 
+  const move = (dir: NavigationDirection, msgFim: string) => {
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+    viewer.moveDir(dir).catch(() => {
+      setNavMsg(msgFim);
+      setTimeout(() => setNavMsg(null), 1600);
+    });
+  };
+
   return (
     <div className="street-view" ref={containerRef}>
       {failed && thumb && <img className="street-fallback" src={thumb} alt="Local" />}
       {failed && !thumb && <div className="street-fallback-loading">Carregando foto…</div>}
+
+      {!failed && (
+        <div className="sv-nav">
+          <button
+            className="sv-nav-btn fwd"
+            title="Andar pra frente"
+            onClick={() => move(NavigationDirection.Next, "Fim da rua por aqui 🛑")}
+          >
+            ▲
+          </button>
+          <button
+            className="sv-nav-btn"
+            title="Andar pra trás"
+            onClick={() => move(NavigationDirection.Prev, "Não dá pra voltar mais 🛑")}
+          >
+            ▼
+          </button>
+        </div>
+      )}
+      {navMsg && <div className="sv-nav-msg">{navMsg}</div>}
     </div>
   );
 }
