@@ -29,7 +29,7 @@ function randomPointIn(bbox) {
 }
 
 // Busca uma imagem de rua aleatória num ponto bem coberto do mundo.
-export async function getRandomImage(token, { maxAttempts = 16 } = {}) {
+export async function getRandomImage(token, { maxAttempts = 30 } = {}) {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const region = randomRegion();
     const pt = randomPointIn(region.bbox);
@@ -53,26 +53,20 @@ export async function getRandomImage(token, { maxAttempts = 16 } = {}) {
         const id = feat.properties.id;
         // IDs do Mapillary > 2^53 são corrompidos ao virar número JS -> pula.
         if (typeof id !== "number" || !Number.isSafeInteger(id)) continue;
+        // SÓ panoramas 360°.
+        if (feat.properties.is_pano !== true && feat.properties.is_pano !== 1) continue;
         const gj = feat.toGeoJSON(x, y, TILE_Z);
         const [lng, lat] = gj.geometry.coordinates;
-        features.push({
-          id: String(id),
-          lng,
-          lat,
-          isPano: gj.properties.is_pano === true || gj.properties.is_pano === 1,
-        });
+        features.push({ id: String(id), lng, lat, isPano: true });
       }
     } catch (err) {
       console.warn(`[mapillary] erro em ${region.name}:`, err.message);
       continue;
     }
 
-    if (!features || features.length === 0) continue;
+    if (!features || features.length === 0) continue; // tile sem 360° -> tenta outro
 
-    // Prefere panoramas (navegação 360°), mas aceita qualquer imagem.
-    const panos = features.filter((f) => f.isPano);
-    const pool = panos.length > 0 ? panos : features;
-    const img = pool[Math.floor(Math.random() * pool.length)];
+    const img = features[Math.floor(Math.random() * features.length)];
 
     return {
       imageId: img.id,

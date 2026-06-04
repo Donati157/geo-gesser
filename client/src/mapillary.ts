@@ -29,7 +29,7 @@ export function mapillaryToken(): string {
   return TOKEN || "";
 }
 
-export async function getRandomImage(maxAttempts = 18): Promise<SoloImage> {
+export async function getRandomImage(maxAttempts = 30): Promise<SoloImage> {
   if (!TOKEN) throw new Error("Token do Mapillary não configurado no cliente.");
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -55,21 +55,15 @@ export async function getRandomImage(maxAttempts = 18): Promise<SoloImage> {
         const id = (feat.properties as any).id;
         // IDs do Mapillary > 2^53 são corrompidos ao virar número JS -> pula.
         if (typeof id !== "number" || !Number.isSafeInteger(id)) continue;
+        const isPano = (feat.properties as any).is_pano === true || (feat.properties as any).is_pano === 1;
+        if (!isPano) continue; // SÓ panoramas 360°
         const gj: any = feat.toGeoJSON(x, y, TILE_Z);
         const [flng, flat] = gj.geometry.coordinates;
-        feats.push({
-          imageId: String(id),
-          lng: flng,
-          lat: flat,
-          region: region.name,
-          isPano: gj.properties.is_pano === true || gj.properties.is_pano === 1,
-        });
+        feats.push({ imageId: String(id), lng: flng, lat: flat, region: region.name, isPano: true });
       }
-      if (feats.length === 0) continue;
+      if (feats.length === 0) continue; // tile sem 360° -> tenta outro
 
-      const panos = feats.filter((f) => f.isPano);
-      const pool = panos.length > 0 ? panos : feats;
-      return pool[Math.floor(Math.random() * pool.length)];
+      return feats[Math.floor(Math.random() * feats.length)];
     } catch {
       continue;
     }
