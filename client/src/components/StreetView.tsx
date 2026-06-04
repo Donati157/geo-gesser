@@ -16,20 +16,18 @@ function webglAvailable(): boolean {
 }
 
 // Visualizador de rua do Mapillary (WebGL via mapillary-js).
-// Se o WebGL falhar/cair, OU se o jogador pedir, mostra a FOTO ESTÁTICA do
-// local — assim o jogo nunca trava numa tela preta e sempre dá pra adivinhar.
+// Se o WebGL não estiver disponível ou o contexto cair, troca automaticamente
+// (e silenciosamente) para a foto estática do local — sem botões na tela.
 export default function StreetView({ imageId, token }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Viewer | null>(null);
   const imageIdRef = useRef(imageId);
   const recoverRef = useRef(0);
   const [gen, setGen] = useState(0);
-  const [failed, setFailed] = useState(() => !webglAvailable()); // WebGL indisponível/perdido
-  const [userStatic, setUserStatic] = useState(false); // jogador escolheu foto estática
+  const [failed, setFailed] = useState(() => !webglAvailable());
   const [thumb, setThumb] = useState<string | null>(null);
 
   imageIdRef.current = imageId;
-  const showStatic = failed || userStatic;
 
   // Busca a foto estática (fallback) na maior resolução disponível.
   useEffect(() => {
@@ -47,9 +45,9 @@ export default function StreetView({ imageId, token }: Props) {
     };
   }, [imageId, token]);
 
-  // Cria (ou recria) o visualizador WebGL — só quando não estiver em modo foto.
+  // Cria (ou recria) o visualizador WebGL — só enquanto não tiver falhado.
   useEffect(() => {
-    if (showStatic) return;
+    if (failed) return;
     const el = containerRef.current;
     if (!el) return;
 
@@ -89,42 +87,19 @@ export default function StreetView({ imageId, token }: Props) {
       viewerRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, gen, showStatic]);
+  }, [token, gen, failed]);
 
   // Move para a nova imagem quando a rodada troca.
   useEffect(() => {
     const viewer = viewerRef.current;
-    if (showStatic || !viewer || !imageId) return;
+    if (failed || !viewer || !imageId) return;
     viewer.moveTo(imageId).catch(() => {});
-  }, [imageId, showStatic]);
-
-  const retry360 = () => {
-    recoverRef.current = 0;
-    setFailed(false);
-    setUserStatic(false);
-    setGen((g) => g + 1);
-  };
+  }, [imageId, failed]);
 
   return (
     <div className="street-view" ref={containerRef}>
-      {showStatic && thumb && <img className="street-fallback" src={thumb} alt="Local" />}
-      {showStatic && !thumb && <div className="street-fallback-loading">Carregando foto…</div>}
-
-      {!showStatic ? (
-        <button
-          className="sv-toggle"
-          title="Se a imagem travar, troque para a foto estática"
-          onClick={() => setUserStatic(true)}
-        >
-          🖼️ Travou? Ver foto
-        </button>
-      ) : (
-        !failed && (
-          <button className="sv-toggle" onClick={retry360}>
-            ↻ Tentar 360°
-          </button>
-        )
-      )}
+      {failed && thumb && <img className="street-fallback" src={thumb} alt="Local" />}
+      {failed && !thumb && <div className="street-fallback-loading">Carregando foto…</div>}
     </div>
   );
 }
