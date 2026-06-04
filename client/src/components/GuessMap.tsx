@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import type { RoundResult } from "../types";
+import { formatDist } from "../scoring";
+import { findCountry } from "../countries";
 
 interface RevealData {
   actual: { lat: number; lng: number };
@@ -94,18 +96,29 @@ export default function GuessMap({ interactive, pick, onPick, reveal, onConfirm 
     }
   }, [pick, reveal]);
 
-  // Camada de revelação: local real + palpites.
+  // Camada de revelação: país pintado + local real + palpites + distância.
   useEffect(() => {
     const map = mapRef.current;
     const layer = layerRef.current;
     if (!map || !layer) return;
     layer.clearLayers();
     if (!reveal) return;
+    let cancelled = false;
 
     const { actual, results, you } = reveal;
     const bounds: L.LatLngExpression[] = [[actual.lat, actual.lng]];
 
-    L.marker([actual.lat, actual.lng], { icon: pin("target", "🎯") })
+    // Pinta o país do local real (carrega contornos sob demanda).
+    findCountry(actual.lat, actual.lng).then((feat) => {
+      if (cancelled || !feat || !layerRef.current) return;
+      L.geoJSON(feat as any, {
+        style: { color: "#ef4444", weight: 1.5, fillColor: "#ef4444", fillOpacity: 0.22 },
+        interactive: false,
+      }).addTo(layerRef.current);
+    });
+
+    // Bandeira no local real.
+    L.marker([actual.lat, actual.lng], { icon: pin("target", "🏁") })
       .addTo(layer)
       .bindTooltip("Local real", { direction: "top" });
 
@@ -120,8 +133,16 @@ export default function GuessMap({ interactive, pick, onPick, reveal, onConfirm 
           [r.guess.lat, r.guess.lng],
           [actual.lat, actual.lng],
         ],
-        { color: mine ? "#22d3ee" : "#94a3b8", weight: mine ? 3 : 1.5, dashArray: mine ? "" : "4 6", opacity: 0.8 }
+        { color: "#ef4444", weight: mine ? 3 : 1.5, dashArray: mine ? "" : "5 6", opacity: 0.9 }
       ).addTo(layer);
+      // Distância escrita no meio da linha.
+      if (typeof r.distanceKm === "number") {
+        const mid: L.LatLngTuple = [(r.guess.lat + actual.lat) / 2, (r.guess.lng + actual.lng) / 2];
+        L.marker(mid, {
+          icon: L.divIcon({ className: "", html: `<div class="dist-label">${formatDist(r.distanceKm)}</div>`, iconSize: [0, 0] }),
+          interactive: false,
+        }).addTo(layer);
+      }
       bounds.push([r.guess.lat, r.guess.lng]);
     }
 
@@ -130,6 +151,10 @@ export default function GuessMap({ interactive, pick, onPick, reveal, onConfirm 
     } else {
       map.setView([actual.lat, actual.lng], 5);
     }
+
+    return () => {
+      cancelled = true;
+    };
   }, [reveal]);
 
   return (
