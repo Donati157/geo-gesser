@@ -18,6 +18,8 @@ interface Props {
   onConfirm?: () => void; // confirmar palpite (usado no modo tela cheia)
 }
 
+const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY as string | undefined;
+
 const pin = (cls: string, label = "") =>
   L.divIcon({
     className: "",
@@ -41,12 +43,27 @@ export default function GuessMap({ interactive, pick, onPick, reveal, onConfirm 
       zoom: 2,
       worldCopyJump: true,
       zoomControl: true,
-      attributionControl: false,
+      attributionControl: true,
     });
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-      maxZoom: 19,
-      subdomains: "abcd",
-    }).addTo(map);
+    map.attributionControl.setPrefix(false);
+    // Mapa detalhado (ruas, bairros, POIs) via MapTiler Streets. Cai pro CARTO
+    // se a chave não estiver configurada.
+    if (MAPTILER_KEY) {
+      L.tileLayer(`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`, {
+        tileSize: 512,
+        zoomOffset: -1,
+        minZoom: 1,
+        maxZoom: 20,
+        crossOrigin: true,
+        attribution:
+          '<a href="https://www.maptiler.com/copyright/" target="_blank">MapTiler</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM</a>',
+      }).addTo(map);
+    } else {
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+        maxZoom: 19,
+        subdomains: "abcd",
+      }).addTo(map);
+    }
     layerRef.current = L.layerGroup().addTo(map);
     mapRef.current = map;
     setTimeout(() => map.invalidateSize(), 50);
