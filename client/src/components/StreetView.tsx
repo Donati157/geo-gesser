@@ -67,9 +67,10 @@ export default function StreetView({ imageId, token }: Props) {
     }
     viewerRef.current = viewer;
 
-    // Navegar SÓ para imagens 360° (esféricas) — remove as setas que levam
-    // para fotos chapadas (perspectiva/fisheye).
-    viewer.setFilter(["==", "cameraType", "spherical"]).catch(() => {});
+    // NÃO filtramos a navegação por tipo de câmera: o filtro estrito (só 360°)
+    // fazia as setas SUMIREM em pontos onde os vizinhos eram fotos chapadas.
+    // A rodada sempre COMEÇA num 360° (filtro no sorteio); a navegação fica
+    // sempre disponível pra nunca travar.
 
     const canvas = el.querySelector("canvas");
     const onLost = (e: Event) => {
