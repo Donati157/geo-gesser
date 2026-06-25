@@ -1,0 +1,121 @@
+/* ====== Zen Zone — quiz de bordo ====== */
+.zz {
+  --zz-accent: #38bdf8;
+  --zz-accent2: #2dd4bf;
+  --zz-bg: #0b1424;
+  --zz-card: rgba(255, 255, 255, 0.06);
+  --zz-card-solid: #16223a;
+  --zz-line: rgba(255, 255, 255, 0.12);
+  --zz-text: #f1f5f9;
+  --zz-muted: #94a3b8;
+  --zz-green: #34d399;
+  --zz-red: #fb7185;
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: clamp(20px, 4vw, 48px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(20px, 3vw, 36px);
+  color: var(--zz-text);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background:
+    radial-gradient(1100px 700px at 75% -10%, rgba(56, 189, 248, 0.18), transparent),
+    radial-gradient(900px 600px at -10% 110%, rgba(45, 212, 191, 0.16), transparent),
+    var(--zz-bg);
+}
+.zz * { box-sizing: border-box; }
+.zz-center { align-items: center; justify-content: center; }
+
+/* ---- home ---- */
+.zz-hero { text-align: center; margin-top: clamp(10px, 5vh, 60px); }
+.zz-logo {
+  font-size: clamp(44px, 8vw, 76px); font-weight: 800; letter-spacing: -2px; margin: 0;
+  line-height: 1;
+}
+.zz-logo span { background: linear-gradient(120deg, var(--zz-accent), var(--zz-accent2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.zz-tag { color: var(--zz-muted); font-size: clamp(15px, 2.2vw, 20px); margin-top: 12px; }
+
+.zz-cats {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: clamp(12px, 2vw, 20px); max-width: 900px; width: 100%; margin: 0 auto;
+}
+.zz-cat {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: clamp(22px, 3vw, 34px) 18px; border-radius: 24px; cursor: pointer;
+  background: var(--zz-card); border: 1px solid var(--zz-line); color: var(--zz-text);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25); backdrop-filter: blur(10px);
+  transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.zz-cat:hover { transform: translateY(-3px); border-color: var(--zz-accent); background: rgba(255, 255, 255, 0.1); }
+.zz-cat:active { transform: scale(0.98); }
+.zz-cat-emoji { font-size: clamp(38px, 6vw, 52px); }
+.zz-cat-name { font-size: clamp(18px, 2.4vw, 22px); font-weight: 700; }
+.zz-cat-sub { font-size: 13px; color: var(--zz-muted); }
+.zz-cat.bonus { border-color: rgba(45, 212, 191, 0.4); background: linear-gradient(160deg, rgba(45, 212, 191, 0.12), rgba(56, 189, 248, 0.08)); }
+.zz-foot { text-align: center; color: var(--zz-muted); font-size: 13px; margin-top: auto; }
+
+/* ---- jogando ---- */
+.zz-play { max-width: 820px; width: 100%; margin: 0 auto; }
+.zz-top {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--zz-card); border: 1px solid var(--zz-line); border-radius: 999px;
+  padding: 10px 18px; backdrop-filter: blur(10px);
+}
+.zz-top-back { background: none; border: none; color: var(--zz-text); font-size: 28px; cursor: pointer; line-height: 1; padding: 0 6px; }
+.zz-top-cat { font-weight: 700; flex: 1; }
+.zz-top-prog { color: var(--zz-muted); font-weight: 600; }
+.zz-top-score { font-weight: 700; color: var(--zz-accent); }
+
+.zz-photo {
+  width: 100%; aspect-ratio: 16 / 9; border-radius: 22px; overflow: hidden;
+  background: #0a1120; border: 1px solid var(--zz-line);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4); display: flex; align-items: center; justify-content: center;
+}
+.zz-photo img { width: 100%; height: 100%; object-fit: cover; display: block; animation: zzfade 0.4s ease; }
+.zz-photo-load { color: var(--zz-muted); font-size: 18px; }
+@keyframes zzfade { from { opacity: 0; } to { opacity: 1; } }
+
+.zz-prompt { font-size: clamp(20px, 3.2vw, 30px); font-weight: 800; text-align: center; margin: 4px 0; }
+
+.zz-options { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(10px, 1.6vw, 16px); }
+.zz-opt {
+  position: relative; padding: clamp(18px, 2.6vw, 26px) 18px; border-radius: 18px;
+  font-size: clamp(16px, 2.2vw, 20px); font-weight: 600; cursor: pointer; text-align: center;
+  background: var(--zz-card-solid); border: 2px solid var(--zz-line); color: var(--zz-text);
+  transition: transform 0.1s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.zz-opt:hover:not(:disabled) { border-color: var(--zz-accent); transform: translateY(-2px); }
+.zz-opt:active:not(:disabled) { transform: scale(0.97); }
+.zz-opt:disabled { cursor: default; }
+.zz-opt.correct { background: rgba(52, 211, 153, 0.2); border-color: var(--zz-green); color: #d1fae5; }
+.zz-opt.wrong { background: rgba(251, 113, 133, 0.18); border-color: var(--zz-red); color: #ffe4e6; }
+.zz-opt.dim { opacity: 0.5; }
+.zz-opt-ic { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 20px; }
+
+.zz-feedback { display: flex; flex-direction: column; gap: 14px; align-items: center; }
+.zz-explain {
+  background: var(--zz-card); border: 1px solid var(--zz-line); border-radius: 14px;
+  padding: 14px 18px; color: var(--zz-muted); text-align: center; font-size: 15px; margin: 0;
+  max-width: 600px;
+}
+
+.zz-btn {
+  border: none; cursor: pointer; font-weight: 700; border-radius: 16px;
+  padding: 16px 36px; font-size: 17px; transition: filter 0.15s ease, transform 0.08s ease;
+}
+.zz-btn:active { transform: translateY(1px); }
+.zz-btn.primary { background: linear-gradient(120deg, var(--zz-accent), var(--zz-accent2)); color: #04121f; }
+.zz-btn.primary:hover { filter: brightness(1.07); }
+.zz-btn.ghost { background: transparent; color: var(--zz-text); border: 1px solid var(--zz-line); }
+
+/* ---- resultado ---- */
+.zz-result { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.zz-result-emoji { font-size: 72px; }
+.zz-score-big { font-size: clamp(56px, 12vw, 96px); font-weight: 800; color: var(--zz-accent); line-height: 1; }
+.zz-score-big span { color: var(--zz-muted); font-size: 0.45em; }
+.zz-result-msg { font-size: 22px; font-weight: 700; }
+.zz-result-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 16px; }
+
+@media (max-width: 480px) {
+  .zz-options { grid-template-columns: 1fr; }
+}
