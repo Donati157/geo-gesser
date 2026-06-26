@@ -116,6 +116,32 @@
 .zz-result-msg { font-size: 22px; font-weight: 700; }
 .zz-result-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 16px; }
 
+/* ---- dificuldade ---- */
+.zz-diff-box {
+  background: var(--zz-card); border: 1px solid var(--zz-line); border-radius: 24px;
+  padding: clamp(24px, 4vw, 40px); max-width: 460px; width: 100%; text-align: center;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px);
+}
+.zz-diff-title { font-size: clamp(24px, 4vw, 32px); margin: 8px 0 0; }
+.zz-diffs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 22px; }
+.zz-diff {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 20px; border-radius: 18px; cursor: pointer; font-size: 18px; font-weight: 700;
+  background: var(--zz-card-solid); border: 2px solid var(--zz-line); color: var(--zz-text);
+  transition: transform 0.1s ease, border-color 0.15s ease;
+}
+.zz-diff:hover { border-color: var(--zz-accent); transform: translateY(-2px); }
+.zz-diff:active { transform: scale(0.97); }
+.zz-diff-emoji { font-size: 28px; }
+.zz-top-back.solo { font-size: 15px; color: var(--zz-muted); float: left; }
+
+.zz-top-diff { font-size: 13px; color: var(--zz-muted); font-weight: 600; }
+
+/* ---- tocar para continuar ---- */
+.zz-tap-hint { color: var(--zz-accent); font-weight: 700; font-size: 15px; animation: zzpulse 1.3s ease-in-out infinite; margin: 4px 0 0; }
+@keyframes zzpulse { 50% { opacity: 0.45; } }
+.zz-next-catch { position: fixed; inset: 0; z-index: 50; cursor: pointer; }
+
 @media (max-width: 480px) {
   .zz-options { grid-template-columns: 1fr; }
 }

@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import "./quiz.css";
-import { CATEGORIES, questionsByCategory, type QuizCategory, type QuizQuestion } from "./questions";
+import {
+  CATEGORIES,
+  DIFFICULTIES,
+  pickRound,
+  questionsByCategory,
+  type Difficulty,
+  type QuizCategory,
+  type QuizQuestion,
+} from "./questions";
 import { wikiPhoto } from "./wiki";
 import SoloGame from "../components/SoloGame";
 
@@ -18,7 +26,7 @@ function shuffle<T>(arr: T[]): T[] {
 interface Prepared {
   q: QuizQuestion;
   opts: string[];
-  correct: number; // índice da resposta certa após embaralhar
+  correct: number;
 }
 
 function prepare(q: QuizQuestion): Prepared {
@@ -27,23 +35,34 @@ function prepare(q: QuizQuestion): Prepared {
   return { q, opts, correct: opts.indexOf(correctText) };
 }
 
-type Screen = "home" | "playing" | "result" | "solo360";
+const DIFF_LABEL: Record<Difficulty, string> = { facil: "🟢 Fácil", medio: "🟡 Médio", dificil: "🔴 Difícil" };
+
+type Screen = "home" | "difficulty" | "playing" | "result" | "solo360";
 
 export default function QuizApp() {
   const [screen, setScreen] = useState<Screen>("home");
+  const [cat, setCat] = useState<QuizCategory>("lugares");
   const [catName, setCatName] = useState("");
+  const [diff, setDiff] = useState<Difficulty | "misto">("misto");
   const [deck, setDeck] = useState<Prepared[]>([]);
   const [idx, setIdx] = useState(0);
   const [score, setScore] = useState(0);
   const [chosen, setChosen] = useState<number | null>(null);
 
-  const startCategory = (cat: QuizCategory, name: string) => {
-    const qs = shuffle(questionsByCategory(cat)).slice(0, ROUND_SIZE).map(prepare);
-    setDeck(qs);
+  const chooseCategory = (c: QuizCategory, name: string) => {
+    setCat(c);
+    setCatName(name);
+    setScreen("difficulty");
+  };
+
+  const startRound = (d: Difficulty | "misto") => {
+    let qs = pickRound(cat, d, ROUND_SIZE);
+    if (qs.length === 0) qs = pickRound(cat, "misto", ROUND_SIZE); // sem perguntas nessa dificuldade
+    setDiff(d);
+    setDeck(qs.map(prepare));
     setIdx(0);
     setScore(0);
     setChosen(null);
-    setCatName(name);
     setScreen("playing");
   };
 
@@ -54,20 +73,17 @@ export default function QuizApp() {
   };
 
   const next = () => {
-    if (idx + 1 >= deck.length) {
-      setScreen("result");
-    } else {
+    if (idx + 1 >= deck.length) setScreen("result");
+    else {
       setIdx((n) => n + 1);
       setChosen(null);
     }
   };
 
   // ---------- 360 ----------
-  if (screen === "solo360") {
-    return <SoloGame onExit={() => setScreen("home")} />;
-  }
+  if (screen === "solo360") return <SoloGame onExit={() => setScreen("home")} />;
 
-  // ---------- HOME (escolher categoria) ----------
+  // ---------- HOME ----------
   if (screen === "home") {
     return (
       <div className="zz">
@@ -77,7 +93,7 @@ export default function QuizApp() {
         </div>
         <div className="zz-cats">
           {CATEGORIES.map((c) => (
-            <button key={c.id} className="zz-cat" onClick={() => startCategory(c.id, c.name)}>
+            <button key={c.id} className="zz-cat" onClick={() => chooseCategory(c.id, c.name)}>
               <span className="zz-cat-emoji">{c.emoji}</span>
               <span className="zz-cat-name">{c.name}</span>
               <span className="zz-cat-sub">{questionsByCategory(c.id).length} perguntas</span>
@@ -94,6 +110,27 @@ export default function QuizApp() {
     );
   }
 
+  // ---------- ESCOLHER DIFICULDADE ----------
+  if (screen === "difficulty") {
+    return (
+      <div className="zz zz-center">
+        <div className="zz-diff-box">
+          <button className="zz-top-back solo" onClick={() => setScreen("home")}>‹ voltar</button>
+          <h2 className="zz-diff-title">{catName}</h2>
+          <p className="zz-tag">Escolha a dificuldade:</p>
+          <div className="zz-diffs">
+            {DIFFICULTIES.map((d) => (
+              <button key={d.id} className="zz-diff" onClick={() => startRound(d.id)}>
+                <span className="zz-diff-emoji">{d.emoji}</span>
+                <span>{d.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ---------- RESULTADO ----------
   if (screen === "result") {
     const pct = Math.round((score / deck.length) * 100);
@@ -105,9 +142,7 @@ export default function QuizApp() {
           <div className="zz-score-big">{score}<span>/{deck.length}</span></div>
           <p className="zz-result-msg">{msg}</p>
           <div className="zz-result-actions">
-            <button className="zz-btn primary" onClick={() => { setIdx(0); setScore(0); setChosen(null); setDeck(shuffle(deck.map((d) => prepare(d.q)))); setScreen("playing"); }}>
-              Jogar de novo
-            </button>
+            <button className="zz-btn primary" onClick={() => startRound(diff)}>Jogar de novo</button>
             <button className="zz-btn ghost" onClick={() => setScreen("home")}>Trocar tema</button>
           </div>
         </div>
@@ -118,11 +153,13 @@ export default function QuizApp() {
   // ---------- JOGANDO ----------
   const cur = deck[idx];
   const answered = chosen !== null;
+  const diffBadge = diff === "misto" ? DIFF_LABEL[cur.q.difficulty] : DIFF_LABEL[diff as Difficulty];
   return (
     <div className="zz zz-play">
       <div className="zz-top">
         <button className="zz-top-back" onClick={() => setScreen("home")}>‹</button>
         <span className="zz-top-cat">{catName}</span>
+        <span className="zz-top-diff">{diffBadge}</span>
         <span className="zz-top-prog">{idx + 1}/{deck.length}</span>
         <span className="zz-top-score">⭐ {score}</span>
       </div>
@@ -150,12 +187,14 @@ export default function QuizApp() {
       </div>
 
       {answered && (
-        <div className="zz-feedback">
-          {cur.q.explain && <p className="zz-explain">{cur.q.explain}</p>}
-          <button className="zz-btn primary" onClick={next}>
-            {idx + 1 >= deck.length ? "Ver resultado" : "Próxima ›"}
-          </button>
-        </div>
+        <>
+          <div className="zz-feedback">
+            {cur.q.explain && <p className="zz-explain">{cur.q.explain}</p>}
+            <p className="zz-tap-hint">Toque em qualquer lugar para continuar ›</p>
+          </div>
+          {/* captura o toque em qualquer lugar para ir à próxima */}
+          <div className="zz-next-catch" onClick={next} />
+        </>
       )}
     </div>
   );
