@@ -1,18 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./quiz.css";
 import {
   CATEGORIES,
   DIFFICULTIES,
-  pickRound,
-  questionsByCategory,
+  poolFor,
   type Difficulty,
   type QuizCategory,
   type QuizQuestion,
 } from "./questions";
 import { wikiPhoto } from "./wiki";
 import SoloGame from "../components/SoloGame";
-
-const ROUND_SIZE = 8;
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -37,17 +34,17 @@ function prepare(q: QuizQuestion): Prepared {
 
 const DIFF_LABEL: Record<Difficulty, string> = { facil: "🟢 Fácil", medio: "🟡 Médio", dificil: "🔴 Difícil" };
 
-type Screen = "home" | "difficulty" | "playing" | "result" | "solo360";
+type Screen = "home" | "difficulty" | "playing" | "solo360";
 
 export default function QuizApp() {
   const [screen, setScreen] = useState<Screen>("home");
   const [cat, setCat] = useState<QuizCategory>("lugares");
   const [catName, setCatName] = useState("");
   const [diff, setDiff] = useState<Difficulty | "misto">("misto");
-  const [deck, setDeck] = useState<Prepared[]>([]);
-  const [idx, setIdx] = useState(0);
+  const [current, setCurrent] = useState<Prepared | null>(null);
   const [score, setScore] = useState(0);
   const [chosen, setChosen] = useState<number | null>(null);
+  const recentRef = useRef<string[]>([]); // ids das últimas perguntas (não repetir cedo)
 
   const chooseCategory = (c: QuizCategory, name: string) => {
     setCat(c);
@@ -55,29 +52,32 @@ export default function QuizApp() {
     setScreen("difficulty");
   };
 
-  const startRound = (d: Difficulty | "misto") => {
-    let qs = pickRound(cat, d, ROUND_SIZE);
-    if (qs.length === 0) qs = pickRound(cat, "misto", ROUND_SIZE); // sem perguntas nessa dificuldade
-    setDiff(d);
-    setDeck(qs.map(prepare));
-    setIdx(0);
-    setScore(0);
+  // Sorteia a próxima pergunta evitando as recentes (pode repetir depois de um tempo).
+  const nextQuestion = (c: QuizCategory, d: Difficulty | "misto") => {
+    const pool = poolFor(c, d);
+    const keep = Math.max(0, Math.min(pool.length - 1, 8)); // quantas lembrar
+    const recent = recentRef.current;
+    let candidates = pool.filter((q) => !recent.includes(q.id));
+    if (candidates.length === 0) candidates = pool;
+    const q = candidates[Math.floor(Math.random() * candidates.length)];
+    recent.push(q.id);
+    while (recent.length > keep) recent.shift();
+    setCurrent(prepare(q));
     setChosen(null);
+  };
+
+  const startRound = (d: Difficulty | "misto") => {
+    setDiff(d);
+    setScore(0);
+    recentRef.current = [];
+    nextQuestion(cat, d);
     setScreen("playing");
   };
 
   const answer = (i: number) => {
-    if (chosen !== null) return;
+    if (chosen !== null || !current) return;
     setChosen(i);
-    if (i === deck[idx].correct) setScore((s) => s + 1);
-  };
-
-  const next = () => {
-    if (idx + 1 >= deck.length) setScreen("result");
-    else {
-      setIdx((n) => n + 1);
-      setChosen(null);
-    }
+    if (i === current.correct) setScore((s) => s + 1);
   };
 
   // ---------- 360 ----------
@@ -96,7 +96,7 @@ export default function QuizApp() {
             <button key={c.id} className="zz-cat" onClick={() => chooseCategory(c.id, c.name)}>
               <span className="zz-cat-emoji">{c.emoji}</span>
               <span className="zz-cat-name">{c.name}</span>
-              <span className="zz-cat-sub">{questionsByCategory(c.id).length} perguntas</span>
+              <span className="zz-cat-sub">{c.sub}</span>
             </button>
           ))}
           <button className="zz-cat bonus" onClick={() => setScreen("solo360")}>
@@ -131,56 +131,36 @@ export default function QuizApp() {
     );
   }
 
-  // ---------- RESULTADO ----------
-  if (screen === "result") {
-    const pct = Math.round((score / deck.length) * 100);
-    const msg = pct >= 80 ? "Mandou muito! 🏆" : pct >= 50 ? "Foi bem! 👏" : "Bora treinar! 💪";
-    return (
-      <div className="zz zz-center">
-        <div className="zz-result">
-          <div className="zz-result-emoji">{pct >= 80 ? "🏆" : pct >= 50 ? "🎉" : "🧭"}</div>
-          <div className="zz-score-big">{score}<span>/{deck.length}</span></div>
-          <p className="zz-result-msg">{msg}</p>
-          <div className="zz-result-actions">
-            <button className="zz-btn primary" onClick={() => startRound(diff)}>Jogar de novo</button>
-            <button className="zz-btn ghost" onClick={() => setScreen("home")}>Trocar tema</button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ---------- JOGANDO ----------
-  const cur = deck[idx];
+  // ---------- JOGANDO (contínuo) ----------
+  if (!current) return null;
   const answered = chosen !== null;
-  const diffBadge = diff === "misto" ? DIFF_LABEL[cur.q.difficulty] : DIFF_LABEL[diff as Difficulty];
+  const diffBadge = diff === "misto" ? DIFF_LABEL[current.q.difficulty] : DIFF_LABEL[diff as Difficulty];
   return (
     <div className="zz zz-play">
       <div className="zz-top">
         <button className="zz-top-back" onClick={() => setScreen("home")}>‹</button>
         <span className="zz-top-cat">{catName}</span>
         <span className="zz-top-diff">{diffBadge}</span>
-        <span className="zz-top-prog">{idx + 1}/{deck.length}</span>
         <span className="zz-top-score">⭐ {score}</span>
       </div>
 
-      {cur.q.wiki || cur.q.image ? <QuestionPhoto q={cur.q} key={cur.q.id} /> : null}
+      {current.q.wiki || current.q.image ? <QuestionPhoto q={current.q} key={current.q.id} /> : null}
 
-      <h2 className="zz-prompt">{cur.q.prompt}</h2>
+      <h2 className="zz-prompt">{current.q.prompt}</h2>
 
       <div className="zz-options">
-        {cur.opts.map((opt, i) => {
+        {current.opts.map((opt, i) => {
           let cls = "zz-opt";
           if (answered) {
-            if (i === cur.correct) cls += " correct";
+            if (i === current.correct) cls += " correct";
             else if (i === chosen) cls += " wrong";
             else cls += " dim";
           }
           return (
             <button key={i} className={cls} disabled={answered} onClick={() => answer(i)}>
               {opt}
-              {answered && i === cur.correct && <span className="zz-opt-ic">✓</span>}
-              {answered && i === chosen && i !== cur.correct && <span className="zz-opt-ic">✕</span>}
+              {answered && i === current.correct && <span className="zz-opt-ic">✓</span>}
+              {answered && i === chosen && i !== current.correct && <span className="zz-opt-ic">✕</span>}
             </button>
           );
         })}
@@ -189,11 +169,11 @@ export default function QuizApp() {
       {answered && (
         <>
           <div className="zz-feedback">
-            {cur.q.explain && <p className="zz-explain">{cur.q.explain}</p>}
+            {current.q.explain && <p className="zz-explain">{current.q.explain}</p>}
             <p className="zz-tap-hint">Toque em qualquer lugar para continuar ›</p>
           </div>
           {/* captura o toque em qualquer lugar para ir à próxima */}
-          <div className="zz-next-catch" onClick={next} />
+          <div className="zz-next-catch" onClick={() => nextQuestion(cat, diff)} />
         </>
       )}
     </div>

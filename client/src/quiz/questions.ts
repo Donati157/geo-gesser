@@ -20,12 +20,19 @@ export interface QuizQuestion {
   explain?: string;
 }
 
-export const CATEGORIES: { id: QuizCategory; name: string; emoji: string; hasPhoto: boolean }[] = [
-  { id: "lugares", name: "Lugares", emoji: "🌍", hasPhoto: true },
-  { id: "comidas", name: "Comidas", emoji: "🍽️", hasPhoto: true },
-  { id: "fatos", name: "Fatos do Brasil", emoji: "🇧🇷", hasPhoto: false },
-  { id: "marcas", name: "Marcas", emoji: "🏷️", hasPhoto: false },
+export const CATEGORIES: { id: QuizCategory; name: string; emoji: string; sub: string; hasPhoto: boolean }[] = [
+  { id: "lugares", name: "Lugares", emoji: "🌍", sub: "fotos pelo mundo", hasPhoto: true },
+  { id: "comidas", name: "Comidas", emoji: "🍽️", sub: "pratos típicos", hasPhoto: true },
+  { id: "fatos", name: "Fatos do Brasil", emoji: "🇧🇷", sub: "cultura brasileira", hasPhoto: false },
+  { id: "marcas", name: "Marcas", emoji: "🏷️", sub: "de onde vêm", hasPhoto: false },
 ];
+
+// Perguntas de uma categoria + dificuldade (sem cortar), p/ o modo contínuo.
+export function poolFor(cat: QuizCategory, diff: Difficulty | "misto"): QuizQuestion[] {
+  let pool = QUESTIONS.filter((q) => q.category === cat);
+  if (diff !== "misto") pool = pool.filter((q) => q.difficulty === diff);
+  return pool;
+}
 
 export const DIFFICULTIES: { id: Difficulty | "misto"; name: string; emoji: string }[] = [
   { id: "misto", name: "Misto", emoji: "🎲" },
