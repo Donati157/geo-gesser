@@ -52,6 +52,8 @@
 .zz-cat-name { font-size: clamp(18px, 2.4vw, 22px); font-weight: 700; }
 .zz-cat-sub { font-size: 13px; color: var(--zz-muted); }
 .zz-cat.bonus { border-color: rgba(45, 212, 191, 0.4); background: linear-gradient(160deg, rgba(45, 212, 191, 0.12), rgba(56, 189, 248, 0.08)); }
+.zz-cat.hard { border-color: rgba(251, 146, 60, 0.5); background: linear-gradient(160deg, rgba(251, 146, 60, 0.16), rgba(239, 68, 68, 0.1)); }
+.zz-cat.hard:hover { border-color: #fb923c; }
 .zz-foot { text-align: center; color: var(--zz-muted); font-size: 13px; margin-top: auto; }
 
 /* ---- jogando ---- */
@@ -72,6 +74,8 @@
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4); display: flex; align-items: center; justify-content: center;
 }
 .zz-photo img { width: 100%; height: 100%; object-fit: contain; display: block; animation: zzfade 0.4s ease; }
+.zz-photo.logo { background: #fff; }
+.zz-photo.logo img { padding: clamp(28px, 6vw, 64px); }
 .zz-photo-load { color: var(--zz-muted); font-size: 18px; }
 @keyframes zzfade { from { opacity: 0; } to { opacity: 1; } }
 

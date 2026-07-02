@@ -11,6 +11,8 @@ import {
 import { wikiPhoto } from "./wiki";
 import SoloGame from "../components/SoloGame";
 
+type Mode = QuizCategory | "hard";
+
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -38,24 +40,23 @@ type Screen = "home" | "difficulty" | "playing" | "solo360";
 
 export default function QuizApp() {
   const [screen, setScreen] = useState<Screen>("home");
-  const [cat, setCat] = useState<QuizCategory>("lugares");
-  const [catName, setCatName] = useState("");
+  const [mode, setMode] = useState<Mode>("lugares");
+  const [modeName, setModeName] = useState("");
   const [diff, setDiff] = useState<Difficulty | "misto">("misto");
   const [current, setCurrent] = useState<Prepared | null>(null);
   const [score, setScore] = useState(0);
   const [chosen, setChosen] = useState<number | null>(null);
-  const recentRef = useRef<string[]>([]); // ids das últimas perguntas (não repetir cedo)
+  const recentRef = useRef<string[]>([]);
 
   const chooseCategory = (c: QuizCategory, name: string) => {
-    setCat(c);
-    setCatName(name);
+    setMode(c);
+    setModeName(name);
     setScreen("difficulty");
   };
 
-  // Sorteia a próxima pergunta evitando as recentes (pode repetir depois de um tempo).
-  const nextQuestion = (c: QuizCategory, d: Difficulty | "misto") => {
-    const pool = poolFor(c, d);
-    const keep = Math.max(0, Math.min(pool.length - 1, 8)); // quantas lembrar
+  const nextQuestion = (m: Mode, d: Difficulty | "misto") => {
+    const pool = poolFor(m, d);
+    const keep = Math.max(0, Math.min(pool.length - 1, 12));
     const recent = recentRef.current;
     let candidates = pool.filter((q) => !recent.includes(q.id));
     if (candidates.length === 0) candidates = pool;
@@ -66,11 +67,13 @@ export default function QuizApp() {
     setChosen(null);
   };
 
-  const startRound = (d: Difficulty | "misto") => {
+  const begin = (m: Mode, name: string, d: Difficulty | "misto") => {
+    setMode(m);
+    setModeName(name);
     setDiff(d);
     setScore(0);
     recentRef.current = [];
-    nextQuestion(cat, d);
+    nextQuestion(m, d);
     setScreen("playing");
   };
 
@@ -99,6 +102,11 @@ export default function QuizApp() {
               <span className="zz-cat-sub">{c.sub}</span>
             </button>
           ))}
+          <button className="zz-cat hard" onClick={() => begin("hard", "Hard 🔥", "misto")}>
+            <span className="zz-cat-emoji">🔥</span>
+            <span className="zz-cat-name">Hard</span>
+            <span className="zz-cat-sub">um pouco de tudo</span>
+          </button>
           <button className="zz-cat bonus" onClick={() => setScreen("solo360")}>
             <span className="zz-cat-emoji">🌐</span>
             <span className="zz-cat-name">Mundo 360°</span>
@@ -116,11 +124,11 @@ export default function QuizApp() {
       <div className="zz zz-center">
         <div className="zz-diff-box">
           <button className="zz-top-back solo" onClick={() => setScreen("home")}>‹ voltar</button>
-          <h2 className="zz-diff-title">{catName}</h2>
+          <h2 className="zz-diff-title">{modeName}</h2>
           <p className="zz-tag">Escolha a dificuldade:</p>
           <div className="zz-diffs">
             {DIFFICULTIES.map((d) => (
-              <button key={d.id} className="zz-diff" onClick={() => startRound(d.id)}>
+              <button key={d.id} className="zz-diff" onClick={() => begin(mode, modeName, d.id)}>
                 <span className="zz-diff-emoji">{d.emoji}</span>
                 <span>{d.name}</span>
               </button>
@@ -135,16 +143,17 @@ export default function QuizApp() {
   if (!current) return null;
   const answered = chosen !== null;
   const diffBadge = diff === "misto" ? DIFF_LABEL[current.q.difficulty] : DIFF_LABEL[diff as Difficulty];
+  const hasImg = current.q.wiki || current.q.image || current.q.logo;
   return (
     <div className="zz zz-play">
       <div className="zz-top">
         <button className="zz-top-back" onClick={() => setScreen("home")}>‹</button>
-        <span className="zz-top-cat">{catName}</span>
+        <span className="zz-top-cat">{modeName}</span>
         <span className="zz-top-diff">{diffBadge}</span>
         <span className="zz-top-score">⭐ {score}</span>
       </div>
 
-      {current.q.wiki || current.q.image ? <QuestionPhoto q={current.q} key={current.q.id} /> : null}
+      {hasImg ? <QuestionPhoto q={current.q} key={current.q.id} /> : null}
 
       <h2 className="zz-prompt">{current.q.prompt}</h2>
 
@@ -172,8 +181,7 @@ export default function QuizApp() {
             {current.q.explain && <p className="zz-explain">{current.q.explain}</p>}
             <p className="zz-tap-hint">Toque em qualquer lugar para continuar ›</p>
           </div>
-          {/* captura o toque em qualquer lugar para ir à próxima */}
-          <div className="zz-next-catch" onClick={() => nextQuestion(cat, diff)} />
+          <div className="zz-next-catch" onClick={() => nextQuestion(mode, diff)} />
         </>
       )}
     </div>
@@ -181,11 +189,12 @@ export default function QuizApp() {
 }
 
 function QuestionPhoto({ q }: { q: QuizQuestion }) {
-  const [src, setSrc] = useState<string | null>(q.image ?? null);
-  const [loading, setLoading] = useState(!q.image);
+  const logoSrc = q.logo ? `https://cdn.simpleicons.org/${q.logo}` : null;
+  const [src, setSrc] = useState<string | null>(q.image ?? logoSrc);
+  const [loading, setLoading] = useState(!q.image && !q.logo);
 
   useEffect(() => {
-    if (q.image || !q.wiki) return;
+    if (q.image || q.logo || !q.wiki) return; // logo/image são diretos
     let active = true;
     setLoading(true);
     wikiPhoto(q.wiki).then((url) => {
@@ -200,8 +209,8 @@ function QuestionPhoto({ q }: { q: QuizQuestion }) {
   }, [q]);
 
   return (
-    <div className="zz-photo">
-      {loading ? <div className="zz-photo-load">Carregando foto…</div> : src ? <img src={src} alt="" /> : <div className="zz-photo-load">📷</div>}
+    <div className={`zz-photo ${q.logo ? "logo" : ""}`}>
+      {loading ? <div className="zz-photo-load">Carregando…</div> : src ? <img src={src} alt="" /> : <div className="zz-photo-load">📷</div>}
     </div>
   );
 }
