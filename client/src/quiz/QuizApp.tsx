@@ -36,6 +36,18 @@ function prepare(q: QuizQuestion): Prepared {
 
 const DIFF_LABEL: Record<Difficulty, string> = { facil: "🟢 Fácil", medio: "🟡 Médio", dificil: "🔴 Difícil" };
 
+// No modo Misto/Hard, as fáceis saem bem menos (menos peso).
+const DIFF_WEIGHT: Record<Difficulty, number> = { facil: 1, medio: 3, dificil: 4 };
+function pickWeighted(list: QuizQuestion[]): QuizQuestion {
+  const total = list.reduce((a, q) => a + DIFF_WEIGHT[q.difficulty], 0);
+  let r = Math.random() * total;
+  for (const q of list) {
+    r -= DIFF_WEIGHT[q.difficulty];
+    if (r <= 0) return q;
+  }
+  return list[list.length - 1];
+}
+
 type Screen = "home" | "difficulty" | "playing" | "solo360";
 
 export default function QuizApp() {
@@ -60,7 +72,9 @@ export default function QuizApp() {
     const recent = recentRef.current;
     let candidates = pool.filter((q) => !recent.includes(q.id));
     if (candidates.length === 0) candidates = pool;
-    const q = candidates[Math.floor(Math.random() * candidates.length)];
+    // Peso por dificuldade (fáceis saem menos no Misto/Hard). Numa dificuldade
+    // fixa, todos têm o mesmo peso, então não muda nada.
+    const q = pickWeighted(candidates);
     recent.push(q.id);
     while (recent.length > keep) recent.shift();
     setCurrent(prepare(q));
