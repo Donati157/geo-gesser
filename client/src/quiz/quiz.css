@@ -71,7 +71,7 @@
   background: #0a1120; border: 1px solid var(--zz-line);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4); display: flex; align-items: center; justify-content: center;
 }
-.zz-photo img { width: 100%; height: 100%; object-fit: cover; display: block; animation: zzfade 0.4s ease; }
+.zz-photo img { width: 100%; height: 100%; object-fit: contain; display: block; animation: zzfade 0.4s ease; }
 .zz-photo-load { color: var(--zz-muted); font-size: 18px; }
 @keyframes zzfade { from { opacity: 0; } to { opacity: 1; } }
 
